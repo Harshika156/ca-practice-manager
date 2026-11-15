@@ -1,0 +1,75 @@
+# Builds the Windows desktop app and its installer for free on GitHub's servers.
+# Run it: GitHub repo -> Actions -> "Build Windows app" -> Run workflow.
+# Download: open the finished run -> Artifacts -> "CAPracticeManager-Setup" (installer to share with colleagues)
+#           or "CAPracticeManager-portable" (zip, no installation).
+# Pushing a tag like v2.0.0 also attaches both files to a GitHub Release.
+name: Build Windows app
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install packages
+        run: python -m pip install -r requirements-desktop.txt
+
+      - name: Build CAPracticeManager.exe
+        run: python -m PyInstaller --noconfirm --clean CAPracticeManager.spec
+
+      - name: Check the app starts
+        shell: pwsh
+        run: |
+          $env:CAPM_HEADLESS = "1"
+          $env:CAPM_PORT = "8599"
+          $env:CAPM_DATA_DIR = "$env:RUNNER_TEMP\capm-check"
+          $p = Start-Process -FilePath "dist\CAPracticeManager\CAPracticeManager.exe" -PassThru
+          $ok = $false
+          for ($i = 0; $i -lt 40; $i++) {
+            Start-Sleep -Seconds 4
+            try { $r = Invoke-WebRequest -UseBasicParsing http://localhost:8599/_stcore/health; if ($r.Content -eq "ok") { $ok = $true; break } } catch {}
+          }
+          Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+          if (-not $ok) { Get-Content "$env:CAPM_DATA_DIR\app.log" -ErrorAction SilentlyContinue; throw "The packaged app did not start" }
+          python -c "import webview, clr; print('app window components OK')"
+          Write-Host "App started and answered the health check."
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          choco install innosetup -y --no-progress
+          $ver = if ($env:GITHUB_REF_TYPE -eq "tag") { $env:GITHUB_REF_NAME.TrimStart("v") } else { "2.0.$env:GITHUB_RUN_NUMBER" }
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" /Q "/DMyAppVersion=$ver" installer.iss
+          Compress-Archive -Path dist\CAPracticeManager -DestinationPath dist\CAPracticeManager-portable.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CAPracticeManager-Setup
+          path: dist/CAPracticeManager-Setup.exe
+          retention-days: 30
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CAPracticeManager-portable
+          path: dist/CAPracticeManager-portable.zip
+          retention-days: 30
+
+      - name: Attach to release (tags only)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/CAPracticeManager-Setup.exe
+            dist/CAPracticeManager-portable.zip
