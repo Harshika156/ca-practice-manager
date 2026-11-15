@@ -23,9 +23,11 @@ import openpyxl  # noqa: F401
 import pandas  # noqa: F401
 import plotly.express  # noqa: F401
 import psycopg2  # noqa: F401
+import pypdf  # noqa: F401
 import sqlalchemy.dialects.postgresql  # noqa: F401
 import sqlalchemy.dialects.sqlite  # noqa: F401
 
+import core.ai  # noqa: F401
 import core.auth  # noqa: F401
 import core.clock  # noqa: F401
 import core.constants  # noqa: F401
@@ -36,6 +38,7 @@ import core.invoice_pdf  # noqa: F401
 import core.ui  # noqa: F401
 import seed  # noqa: F401
 import views.account  # noqa: F401
+import views.ai_assistant  # noqa: F401
 import views.billing  # noqa: F401
 import views.calendar_view  # noqa: F401
 import views.clients  # noqa: F401

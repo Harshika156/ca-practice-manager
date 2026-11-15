@@ -10,9 +10,9 @@ ITERATIONS = 200_000
 
 # Which pages each role can open
 ACCESS = {
-    "Partner": {"dashboard", "tasks", "clients", "calendar", "team", "billing", "documents", "settings", "account"},
-    "Manager": {"dashboard", "tasks", "clients", "calendar", "team", "billing", "documents", "account"},
-    "Staff": {"dashboard", "tasks", "clients", "calendar", "documents", "account"},
+    "Partner": {"dashboard", "tasks", "clients", "calendar", "ai", "team", "billing", "documents", "settings", "account"},
+    "Manager": {"dashboard", "tasks", "clients", "calendar", "ai", "team", "billing", "documents", "account"},
+    "Staff": {"dashboard", "tasks", "clients", "calendar", "ai", "documents", "account"},
 }
 
 DEFAULT_ADMIN = ("admin", "admin@123")

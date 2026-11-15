@@ -175,8 +175,8 @@ if user["must_change"]:
 
 _auto_check_due_dates(user)
 
-from views import (account, billing, calendar_view, clients, dashboard, documents,  # noqa: E402
-                   settings, tasks, team)
+from views import (account, ai_assistant, billing, calendar_view, clients, dashboard,  # noqa: E402
+                   documents, settings, tasks, team)
 
 PAGES = {
     "dashboard": st.Page(dashboard.render, title="Dashboard", icon=":material/space_dashboard:", url_path="dashboard",
@@ -184,6 +184,7 @@ PAGES = {
     "tasks": st.Page(tasks.render, title="Task Board" if auth.sees_all_work(user) else "My Work",
                      icon=":material/view_kanban:", url_path="tasks"),
     "calendar": st.Page(calendar_view.render, title="Compliance Calendar", icon=":material/event:", url_path="calendar"),
+    "ai": st.Page(ai_assistant.render, title="AI Assistant", icon=":material/auto_awesome:", url_path="ai"),
     "clients": st.Page(clients.render, title="Clients", icon=":material/groups:", url_path="clients"),
     "billing": st.Page(billing.render, title="Billing", icon=":material/receipt_long:", url_path="billing"),
     "documents": st.Page(documents.render, title="Documents", icon=":material/folder_open:", url_path="documents"),
@@ -191,7 +192,7 @@ PAGES = {
     "settings": st.Page(settings.render, title="Settings", icon=":material/settings:", url_path="settings"),
     "account": st.Page(account.render, title="My Account", icon=":material/person:", url_path="account"),
 }
-SECTIONS = {"Workspace": ["dashboard", "tasks", "calendar"], "Practice": ["clients", "billing", "documents"],
+SECTIONS = {"Workspace": ["dashboard", "tasks", "calendar", "ai"], "Practice": ["clients", "billing", "documents"],
             "Firm": ["team", "settings", "account"]}
 allowed = {sec: [k for k in keys if auth.can(user, k)] for sec, keys in SECTIONS.items()}
 page = st.navigation([PAGES[k] for keys in allowed.values() for k in keys], position="hidden")

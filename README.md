@@ -22,6 +22,8 @@ A typical CA firm handles dozens of clients, each with 20–50 recurring statuto
 | **GST billing** | Invoices with SAC codes, automatic CGST + SGST (same state) or IGST (other state), amount in words (lakh/crore), a branded PDF, one-click monthly retainer billing and receivables ageing. |
 | **Document vault** | Uploads stored in the database, tagged by client, category and financial year. |
 | **Logins & roles** | Partner / Manager / Staff with salted PBKDF2 password hashing, forced password change on first login, and page-level access control. |
+| **AI Assistant** (Google Gemini, free tier) | *Ask about your practice* in plain English ("what is overdue and who is handling it?"), answered from the firm's live data · *Client reminders* drafted in English, Hindi, Gujarati or Marathi with the client's pending compliances and documents needed, sent via WhatsApp or e-mail in one click · *Notice reader*: upload a GST / Income Tax / TDS notice (PDF) and get its type, section, reply due date, amount, issues, documents needed and reply points, then create a task or a draft reply |
+| **Responsible AI** | Client names, staff names, PAN, GSTIN, Aadhaar, phone, e-mail, IFSC and address lines are **masked on the user's computer before anything is sent**, and restored only in the answer · the user sees exactly what was sent · documents need explicit consent · every AI request is logged (audit trail) · AI output is always a draft for human review |
 | **Backup & reports** | One-click Excel export of clients, tasks, invoices, activity and the document index. |
 
 ## Screenshots
@@ -31,6 +33,7 @@ A typical CA firm handles dozens of clients, each with 20–50 recurring statuto
 | ![Login](docs/screenshots/01_login.png) | ![Task board](docs/screenshots/03_task_board.png) |
 | ![Calendar](docs/screenshots/04_compliance_calendar.png) | ![Team](docs/screenshots/07_team.png) |
 | ![Billing](docs/screenshots/06_billing.png) | ![Invoice PDF](docs/screenshots/09_invoice_pdf.png) |
+| ![AI Assistant](docs/screenshots/10_ai_assistant.png) | ![AI notice reader](docs/screenshots/11_ai_notice_reader.png) |
 
 ## Architecture
 
@@ -46,12 +49,14 @@ flowchart LR
       CORE[core/*<br/>auth · due-date engine · GST · Excel]
     end
     DB[(PostgreSQL<br/>Supabase free tier)]
+    AI[Google Gemini<br/>free tier]
     GH[due_dates.json<br/>on GitHub]
     P --> UI
     S --> UI
     D --> UI
     UI --> CORE --> DB
     CORE -- "Check for updates" --> GH
+    CORE -- "masked prompts only" --> AI
 ```
 
 * **Hosted:** Streamlit Community Cloud runs the app and Supabase hosts the database. Staff open a web link from anywhere.
@@ -173,6 +178,7 @@ core/  config.py          where data lives (local / cloud / .exe)
        duedates.py        due-date rules, task generation, extensions, GitHub updates
        invoice_pdf.py     GST maths, amount in words, PDF
        importer.py        Excel template, client import, Excel export
+       ai.py              Gemini client, masking (pseudonymisation), Q&A, reminders, notice reader
        ui.py, clock.py    design system (navy theme), Indian time
 views/                    one file per page (dashboard, tasks, calendar, clients, billing, documents, team, settings)
 due_dates.json            the firm's master list of statutory due dates
@@ -188,9 +194,12 @@ installer.iss             Windows installer (Start menu / desktop shortcuts, uni
 * Due-date engine: generation is idempotent, the March TDS exception is applied, the QRMP 22nd/24th state split works, extensions move only pending tasks, and updates download from a URL.
 * GST: intra-state CGST+SGST, inter-state IGST, amount in words; the PDF was rendered and checked.
 * Excel import catches bad PAN/GSTIN, a GSTIN that doesn't contain the PAN, and duplicate PANs.
+* AI features tested end to end against a recording stand-in for the Gemini API: every request was audited and contained no client name, staff name, PAN, GSTIN, phone or e-mail; wrong-key, quota and no-text-PDF errors show plain-language messages.
 * The packaged desktop build was run from a blank data folder: first-run connect screen (wrong and right connection details), forced password change, demo data, every page and invoice download. The server runs as a hidden child process and the app falls back to the browser when no app window is available.
 
 ## Limitations
+
+* The AI Assistant uses Google's free tier, where submitted content may be used to improve Google's products. Masking removes identifiers, but financial figures in a notice are still sent; a paid tier (or a local model) is advised for production use. AI answers can be wrong and are always drafts.
 
 * Supabase's free tier gives 500 MB of database space (about 10 MB per upload is allowed here) and pauses after 7 days without use. Streamlit's free hosting sleeps after 12 hours without visits; the first visit after that takes about a minute to wake it.
 * A browser refresh signs the user out (sessions are kept in memory).
@@ -199,7 +208,7 @@ installer.iss             Windows installer (Start menu / desktop shortcuts, uni
 
 ## Future scope
 
-Client portal for document upload · WhatsApp/email reminders before due dates · time sheets and client profitability · e-invoice/IRN and UPI payment links · GST/TDS portal data import · AI assistant to draft notice replies and client reminders · object storage for large files · audit-trail exports for peer review.
+Client portal for document upload · WhatsApp/email reminders before due dates · time sheets and client profitability · e-invoice/IRN and UPI payment links · GST/TDS portal data import · object storage for large files · audit-trail exports for peer review.
 
 ---
 Author: Harshika Bhavsar · AICA Level 2 Capstone.

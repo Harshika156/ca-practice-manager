@@ -8,7 +8,7 @@ This guide has five parts. Do them in order; parts 1 and 2 are enough for a demo
 4. Put the app online for your team (Streamlit Community Cloud)
 5. Get the Windows desktop app and installer
 
-Then: how to give the app your data, how to keep due dates updated, and fixes for common problems.
+Then: switching on the AI Assistant, how to give the app your data, how to keep due dates updated, and fixes for common problems.
 
 ---
 
@@ -90,6 +90,17 @@ A Partner opens **Settings → Data & connection → Share with colleagues** and
 * The app keeps its settings, its local database (in "this computer only" mode) and a log file in `%LOCALAPPDATA%\CAPracticeManager`. Type that into the File Explorer address bar to open it. If something goes wrong, send `app.log` from there.
 * The app window uses Microsoft Edge WebView2, which is built into Windows 10 and 11. If it's missing, the app opens in the normal web browser instead and shows a small "CA Practice Manager is running" window. Close that window to stop the app.
 * Installing a newer Setup.exe over the old one keeps your settings.
+
+---
+
+## Switching on the AI Assistant (free, 5 minutes)
+
+1. Go to **aistudio.google.com** and sign in with any Google account.
+2. Click **Get API key → Create API key**. Copy the key. No payment details are needed for the free tier.
+3. In the app: **Settings → AI assistant**, paste the key, click **Save**, then **Test the AI connection**. It should say "Working".
+4. Everyone in the firm can now use **AI Assistant** in the sidebar. The key is shared; only Partners can see or change it.
+
+Privacy: on Google's free tier, what is sent may be used to improve Google's products and may be read by reviewers. The app masks client names, staff names, PAN, GSTIN, Aadhaar, phone numbers, e-mails and address lines before every request, and shows you exactly what was sent. For a notice, review the masked text and remove anything else confidential before ticking the consent box. If the free model stops working (Google renames models from time to time), pick another model in the same Settings tab.
 
 ---
 

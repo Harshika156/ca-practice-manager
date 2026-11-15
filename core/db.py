@@ -112,6 +112,14 @@ CREATE TABLE IF NOT EXISTS due_date_overrides (
     note TEXT,
     UNIQUE (rule_code, period)
 );
+CREATE TABLE IF NOT EXISTS ai_log (
+    id {PK},
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    feature TEXT NOT NULL,
+    model TEXT,
+    chars_sent INTEGER,
+    at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS app_settings (
     key TEXT PRIMARY KEY,
     value TEXT

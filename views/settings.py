@@ -11,13 +11,16 @@ from . import common
 
 def render():
     ui.header("Settings", "Logins, firm profile, due-date rules and data")
-    t1, t2, t3, t4 = st.tabs(["Team & logins", "Firm profile", "Due-date rules", "Data & connection"])
+    t1, t2, t3, t5, t4 = st.tabs(["Team & logins", "Firm profile", "Due-date rules", "AI assistant",
+                                  "Data & connection"])
     with t1:
         team_logins()
     with t2:
         firm_profile()
     with t3:
         rules_editor()
+    with t5:
+        ai_tab()
     with t4:
         data_tab()
 
@@ -111,6 +114,50 @@ def rules_editor():
                        "WHERE rule_code IS NOT NULL")
             moved = duedates.reschedule_pending(common.me()["id"])
             st.success(f"Saved. {moved} pending task(s) moved to new dates.")
+
+
+def ai_tab():
+    from core import ai
+    st.markdown("The AI Assistant uses **Google Gemini**. Its free tier needs only a Google account: open "
+                "[Google AI Studio](https://aistudio.google.com/), click **Get API key → Create API key**, and paste "
+                "the key here. One key serves the whole firm.")
+    st.warning("Privacy: on Google's free tier, what is sent may be used to improve Google's products and may be "
+               "read by human reviewers. This app therefore masks client names, staff names, PAN, GSTIN, Aadhaar, "
+               "phone numbers and e-mails before every request, and asks for confirmation before a notice is sent. "
+               "Never paste unmasked confidential documents into other AI tools.", icon=":material/shield:")
+    cur_key = db.get_setting("gemini_api_key") or ""
+    with st.form("ai_settings"):
+        on = st.toggle("AI Assistant switched on", db.get_setting("ai_enabled", "1") == "1")
+        key = st.text_input("Gemini API key", type="password",
+                            placeholder=("saved: ••••" + cur_key[-4:]) if cur_key else "paste the key from Google AI Studio",
+                            help="Leave empty to keep the saved key.")
+        choices = ai.MODEL_CHOICES + ["Other…"]
+        cur_model = ai.model()
+        pick = st.selectbox("Model", choices, index=choices.index(cur_model) if cur_model in choices else len(choices) - 1,
+                            help="Flash-Lite has the most generous free limits. Google renames models over time; "
+                                 "if one stops working, pick another or type the new name.")
+        other = st.text_input("Other model name", "" if cur_model in choices else cur_model)
+        if st.form_submit_button("Save", type="primary"):
+            db.set_setting("ai_enabled", "1" if on else "0")
+            if key.strip():
+                db.set_setting("gemini_api_key", key.strip())
+            db.set_setting("gemini_model", other.strip() if pick == "Other…" and other.strip() else
+                           (cur_model if pick == "Other…" else pick))
+            st.success("Saved.")
+    if st.button("Test the AI connection", icon=":material/bolt:"):
+        try:
+            with st.spinner("Contacting Gemini…"):
+                reply = ai.test_connection()
+            st.success(f"Working. Gemini replied: {reply[:60]}")
+        except ai.AIError as e:
+            st.error(str(e))
+    usage = db.query("SELECT feature, COUNT(*) AS calls, COALESCE(SUM(chars_sent),0) AS chars FROM ai_log "
+                     "WHERE at >= :d GROUP BY feature ORDER BY calls DESC",
+                     d=(common.today().replace(day=1)).isoformat())
+    if usage:
+        st.markdown("**AI usage this month** (audit trail)")
+        st.dataframe(pd.DataFrame(usage), hide_index=True, width="stretch",
+                     column_config={"feature": "Feature", "calls": "Requests", "chars": "Characters sent (masked)"})
 
 
 def data_tab():

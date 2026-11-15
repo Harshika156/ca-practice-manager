@@ -34,7 +34,7 @@ datas += [
     ("views", "views"),
 ]
 hiddenimports += collect_submodules("core") + collect_submodules("views") + [
-    "seed", "psycopg2", "openpyxl", "sqlalchemy.dialects.postgresql", "sqlalchemy.dialects.sqlite",
+    "seed", "psycopg2", "openpyxl", "pypdf", "sqlalchemy.dialects.postgresql", "sqlalchemy.dialects.sqlite",
     "webview", "tkinter",
 ]
 if sys.platform == "win32":
