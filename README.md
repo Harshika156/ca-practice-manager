@@ -3,6 +3,8 @@
 **A live, multi-user practice management system for Indian Chartered Accountant firms**, covering GST, Income Tax, TDS and Audit work.
 Built as the AICA Level 2 capstone project, using only free and open-source tools.
 
+**Live demo:** https://ca-practice-manager-y2w8zcbhcmecmjcxc44uha.streamlit.app · **Windows installer:** [CAPracticeManager-Setup.exe](https://github.com/Harshika156/ca-practice-manager/releases/latest/download/CAPracticeManager-Setup.exe)
+
 ![Dashboard](docs/screenshots/02_dashboard.png)
 
 ## The problem
