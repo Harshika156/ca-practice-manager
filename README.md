@@ -213,5 +213,5 @@ installer.iss             Windows installer (Start menu / desktop shortcuts, uni
 Client portal for document upload · WhatsApp/email reminders before due dates · time sheets and client profitability · e-invoice/IRN and UPI payment links · GST/TDS portal data import · object storage for large files · audit-trail exports for peer review.
 
 ---
-Author: Harshika Bhavsar · AICA Level 2 Capstone.
+Author: CA Harshika Rujul Vora (M. No. 178886) · AICA Level 2 Capstone, Batch 109, Gandhinagar.
 *Built with the help of an AI assistant (Claude); design decisions, domain rules and testing were reviewed by the author.*
