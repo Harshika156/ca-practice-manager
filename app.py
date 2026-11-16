@@ -1,4 +1,5 @@
 """CA Practice Manager — entry point.   Run:  streamlit run app.py"""
+import os
 from datetime import datetime
 
 import streamlit as st
@@ -26,6 +27,44 @@ def _startup(url: str):
     auth.ensure_admin()
     duedates.seed_rules()
     return True
+
+
+def database_error(e: Exception):
+    """The saved database can't be reached: explain why in plain words and let the user fix it here."""
+    ui.header("Can't reach the database", config.database_label())
+    raw = config.raw_database_url() or ""
+    hint = db.explain_url_problem(raw, str(e))
+    st.error(hint or "The app couldn't connect to the database. Check the internet connection, and that the "
+                     "Supabase project isn't paused (supabase.com → your project → Restore).", icon=":material/error:")
+    with st.expander("Technical details"):
+        st.code(f"{type(e).__name__}: {str(e).splitlines()[0][:400]}", language=None)
+    if os.environ.get("DATABASE_URL") or config._from_secrets("DATABASE_URL"):
+        st.info("This copy takes its connection from DATABASE_URL in the app's Secrets (Streamlit Cloud → your app → "
+                "Settings → Secrets) or an environment variable. Correct it there, then reboot the app.")
+        return
+    st.markdown("#### Fix the connection")
+    st.caption("Paste the corrected Session pooler string from Supabase (Connect → Direct → Session pooler), "
+               "with your database password in place of [YOUR-PASSWORD].")
+    url = st.text_input("PostgreSQL connection string", type="password", key="fix_url")
+    a, b = st.columns(2)
+    if a.button("Test and save", type="primary", width="stretch"):
+        if not url.strip():
+            st.warning("Paste the connection string first.")
+        else:
+            with st.spinner("Connecting…"):
+                ok, msg = db.test_url(url.strip())
+            if ok:
+                config.save_local_settings({"database_url": url.strip(), "mode": "cloud"})
+                st.cache_resource.clear()
+                db.reset_engine()
+                st.rerun()
+            st.error(db.explain_url_problem(url.strip(), msg) or f"Couldn't connect: {msg}")
+    if b.button("Go back to this computer's data", width="stretch",
+                help="Uses the local database on this PC. Your cloud database is not changed."):
+        config.save_local_settings({"database_url": "", "mode": "local"})
+        st.cache_resource.clear()
+        db.reset_engine()
+        st.rerun()
 
 
 def first_run_setup():
@@ -58,7 +97,7 @@ def first_run_setup():
                     st.cache_resource.clear()
                     db.reset_engine()
                     st.rerun()
-                st.error(f"Couldn't connect: {msg}")
+                st.error(db.explain_url_problem(url.strip(), msg) or f"Couldn't connect: {msg}")
         st.divider()
         st.markdown("### Use on this computer only")
         st.caption("Good for trying the app or a single-user setup. Data stays on this PC. "
@@ -75,10 +114,7 @@ if config.needs_setup():
 try:
     _startup(config.database_url())
 except Exception as e:  # bad cloud URL, no internet, etc.
-    ui.header("Can't reach the database", config.database_label())
-    st.error(f"{type(e).__name__}: {e}")
-    st.info("Check your internet connection and the DATABASE_URL in settings.json (for the .exe) or in the "
-            "app's Secrets (for Streamlit Cloud). See SETUP_GUIDE.md.")
+    database_error(e)
     st.stop()
 
 

@@ -145,6 +145,35 @@ def engine():
     return _ENGINE
 
 
+def explain_url_problem(url: str, error: str = "") -> str | None:
+    """Plain-language reason a connection string fails, for the common mistakes."""
+    u = (url or "").strip()
+    if not u:
+        return None
+    if "[YOUR-PASSWORD]" in u or "YOUR-PASSWORD" in u or "[" in u.split("@")[0]:
+        return "The connection string still contains [YOUR-PASSWORD]. Replace it, including the square brackets, with your Supabase database password."
+    rest = u.split("://", 1)[-1]
+    if rest.count("@") > 1:
+        if ":@" in rest:
+            return ("There is an extra @ right after the colon, before your password (…:@password@…). Delete that "
+                    "first @ so it reads …:password@aws-…")
+        return ("The connection string contains more than one @. If your password itself contains @, reset the "
+                "database password in Supabase to one without @ : / # ? and use the new one.")
+    if "db." in u and ".supabase.co" in u and "pooler" not in u:
+        return ("This is Supabase's 'Direct connection' string, which needs IPv6. Use the Session pooler string "
+                "instead (Connect → Direct → Session pooler).")
+    if ":6543" in u:
+        return "This looks like the Transaction pooler (port 6543). Use the Session pooler string (port 5432)."
+    low = error.lower()
+    if "password authentication failed" in low:
+        return "The database password is wrong. Check it, or reset it in Supabase → Project Settings → Database."
+    if "could not translate host name" in low or "name or service not known" in low or "getaddrinfo" in low:
+        return "The server name couldn't be found. Check your internet connection and that the string was copied in full."
+    if "timeout" in low or "timed out" in low:
+        return "The connection timed out. Check your internet connection, and that the Supabase project isn't paused."
+    return None
+
+
 def test_url(url: str) -> tuple[bool, str]:
     """Try a connection string without changing the app's own connection."""
     try:

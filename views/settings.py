@@ -197,7 +197,7 @@ def data_tab():
                 with st.spinner("Connecting…"):
                     ok, msg = db.test_url(url.strip())
                 if not ok:
-                    st.error(f"Couldn't connect: {msg}")
+                    st.error(db.explain_url_problem(url.strip(), msg) or f"Couldn't connect: {msg}")
                 elif test:
                     st.success("Connection works.")
             if save and url.strip() and ok:
